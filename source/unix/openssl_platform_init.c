@@ -561,7 +561,11 @@ static enum aws_libcrypto_version s_resolve_libcrypto(void) {
     /* Try to auto-resolve against what's linked in/process space */
     AWS_LOGF_DEBUG(AWS_LS_CAL_LIBCRYPTO_RESOLVE, "searching process and loaded modules");
     void *process = dlopen(NULL, RTLD_NOW);
+
+#if 0 /* Disabled because dlopen() always returns NULL for ClickHouse. */
     AWS_FATAL_ASSERT(process && "Unable to load symbols from process space");
+#endif
+
     enum aws_libcrypto_version result = s_resolve_libcrypto_symbols(AWS_LIBCRYPTO_LC, process);
     if (result == AWS_LIBCRYPTO_NONE) {
         AWS_LOGF_DEBUG(AWS_LS_CAL_LIBCRYPTO_RESOLVE, "did not find aws-lc symbols linked");
@@ -575,7 +579,9 @@ static enum aws_libcrypto_version s_resolve_libcrypto(void) {
         AWS_LOGF_DEBUG(AWS_LS_CAL_LIBCRYPTO_RESOLVE, "did not find libcrypto 1.0.2 symbols linked");
         result = s_resolve_libcrypto_symbols(AWS_LIBCRYPTO_1_1_1, process);
     }
-    dlclose(process);
+
+    if (process)
+        dlclose(process);
 
     if (result == AWS_LIBCRYPTO_NONE) {
         AWS_LOGF_DEBUG(AWS_LS_CAL_LIBCRYPTO_RESOLVE, "did not find libcrypto 1.1.1 symbols linked");
