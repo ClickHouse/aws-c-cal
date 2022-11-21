@@ -24,7 +24,7 @@ static struct aws_allocator *s_libcrypto_allocator = NULL;
 /* weak refs to libcrypto functions to force them to at least try to link
  * and avoid dead-stripping
  */
-#if defined(OPENSSL_IS_AWSLC)
+#if defined(OPENSSL_IS_AWSLC) || defined(OPENSSL_IS_BORINGSSL)
 extern HMAC_CTX *HMAC_CTX_new(void) __attribute__((weak, used));
 extern void HMAC_CTX_free(HMAC_CTX *) __attribute__((weak, used));
 extern void HMAC_CTX_reset(HMAC_CTX *) __attribute__((weak, used));
@@ -47,7 +47,9 @@ extern void HMAC_CTX_cleanup(HMAC_CTX *) __attribute__((weak, used));
 extern int HMAC_Update(HMAC_CTX *, const unsigned char *, size_t) __attribute__((weak, used));
 extern int HMAC_Final(HMAC_CTX *, unsigned char *, unsigned int *) __attribute__((weak, used));
 extern int HMAC_Init_ex(HMAC_CTX *, const void *, int, const EVP_MD *, ENGINE *) __attribute__((weak, used));
+#endif
 
+#if !defined(OPENSSL_IS_AWSLC)
 /* libcrypto 1.1 stub for init */
 static void s_hmac_ctx_init_noop(HMAC_CTX *ctx) {
     (void)ctx;
@@ -546,7 +548,7 @@ void aws_cal_platform_init(struct aws_allocator *allocator) {
 
     s_libcrypto_allocator = allocator;
 
-#if !defined(OPENSSL_IS_AWSLC)
+#if !defined(OPENSSL_IS_AWSLC) && !defined(OPENSSL_IS_BORINGSSL)
     /* Ensure that libcrypto 1.0.2 has working locking mechanisms. This code is macro'ed
      * by libcrypto to be a no-op on 1.1.1 */
     if (!CRYPTO_get_locking_callback()) {
@@ -569,7 +571,7 @@ void aws_cal_platform_init(struct aws_allocator *allocator) {
 }
 
 void aws_cal_platform_clean_up(void) {
-#if !defined(OPENSSL_IS_AWSLC)
+#if !defined(OPENSSL_IS_AWSLC) && !defined(OPENSSL_IS_BORINGSSL)
     if (CRYPTO_get_locking_callback() == s_locking_fn) {
         CRYPTO_set_locking_callback(NULL);
         size_t lock_count = (size_t)CRYPTO_num_locks();
