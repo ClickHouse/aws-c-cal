@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0.
 
 cmake_minimum_required(VERSION 3.0)
+
 project(aws-c-cal LANGUAGES C VERSION 0.1.0)
 
 if (POLICY CMP0069)
@@ -96,15 +97,15 @@ else ()
             else()
                 message(FATAL_ERROR "Target crypto is not defined, failed to find libcrypto.")
             endif()
-            set(PLATFORM_LIBS crypto dl)
+            set(PLATFORM_LIBS crypto)
         else()
             #  note aws_use_package() does this for you, except it appends to the public link targets
             # which we probably don't want for this case where we want the crypto dependency private
             if (IN_SOURCE_BUILD)
-                set(PLATFORM_LIBS crypto dl)
+                set(PLATFORM_LIBS crypto)
             else()
                 find_package(crypto REQUIRED)
-                set(PLATFORM_LIBS AWS::crypto dl)
+                set(PLATFORM_LIBS AWS::crypto)
             endif()
         endif()
     endif()
@@ -122,7 +123,7 @@ file(GLOB CAL_SRC
 add_library(${PROJECT_NAME} ${CAL_SRC})
 aws_set_common_properties(${PROJECT_NAME} NO_WEXTRA)
 aws_prepare_symbol_visibility_args(${PROJECT_NAME} "AWS_CAL")
-aws_add_sanitizers(${PROJECT_NAME} BLACKLIST "sanitizer-blacklist.txt")
+aws_add_sanitizers(${PROJECT_NAME})
 
 aws_use_package(aws-c-common)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DEP_AWS_LIBS} ${PLATFORM_LIBS})

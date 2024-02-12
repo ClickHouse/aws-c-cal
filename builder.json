@@ -3,21 +3,33 @@
     "upstream": [
         { "name": "aws-c-common" }
     ],
-    "downstream": [],
+    "downstream": [
+        {
+            "name": "aws-c-io"
+        },
+        {
+            "name": "aws-c-auth"
+        }
+    ],
     "targets": {
         "linux": {
             "upstream": [
                 {
-                    "name": "aws-lc",
-                    "revision": "v1.3.0", "_comment": "avoid commit 3530140 which breaks manylinux1"
+                    "name": "aws-lc"
                 }
             ]
         },
         "android": {
             "upstream": [
                 {
-                    "name": "aws-lc",
-                    "revision": "v1.3.0", "_comment": "avoid commit 3530140 which breaks manylinux1"
+                    "name": "aws-lc"
+                }
+            ]
+        },
+        "openbsd": {
+            "upstream": [
+                {
+                    "name": "aws-lc"
                 }
             ]
         }
@@ -38,6 +50,31 @@
                     ]
                 }
             }
+        },
+        "boringssl": {
+            "hosts": {
+                "ubuntu": {
+                    "packages": [
+                        "golang-go"
+                    ]
+                }
+            },
+            "targets": {
+                "linux": {
+                    "!upstream": [
+                        {
+                            "name": "aws-c-common"
+                        },
+                        {
+                            "name": "boringssl",
+                            "commit": "9939e14"
+                        }
+                    ]
+                }
+            }
+        },
+        "no-tests": {
+            "!test_steps": []
         }
     },
     "test_steps": [
