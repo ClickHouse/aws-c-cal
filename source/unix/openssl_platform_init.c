@@ -131,6 +131,16 @@ enum aws_libcrypto_version {
 
 bool s_resolve_hmac_102(void *module) {
 #if defined(OPENSSL_IS_OPENSSL)
+#if 0
+/* ClickHouse-specific patch:
+ *     AWS-SDK supports boringssl, OpenSSL 1.0, OpenSSL 1.1 and a proprietary crypto library (AWS-LC). OpenSSL 3.x is not explicitly supported.
+ *     It tries to find the right library at runtime by first checking for statically, and then dynamically linked symbols, using a specific
+ *     order of libraries.
+ *     The code below tries to link certain OpenSSL 1.0 symbols which were deprecated in OpenSSL 1.1 and completely removed in OpenSSL 3.0
+ *     (and there is no compatibility compile option in OpenSSL to bring them back). As a result, the linker complains that it can't find
+ *     them. Interestingly, this happens only on Darwin, Linux is fine.
+ *     Since the library order is cascading, the code falls back to OpenSSL 1.1.
+ */
     hmac_ctx_init init_fn = (hmac_ctx_init)HMAC_CTX_init;
     hmac_ctx_clean_up clean_up_fn = (hmac_ctx_clean_up)HMAC_CTX_cleanup;
     hmac_update update_fn = (hmac_update)HMAC_Update;
@@ -164,6 +174,7 @@ bool s_resolve_hmac_102(void *module) {
         g_aws_openssl_hmac_ctx_table = &hmac_ctx_table;
         return true;
     }
+#endif
 #endif
     return false;
 }
@@ -343,6 +354,16 @@ extern int EVP_DigestFinal_ex(EVP_MD_CTX *, unsigned char *, unsigned int *) __a
 
 bool s_resolve_md_102(void *module) {
 #if !defined(OPENSSL_IS_AWSLC)
+/* ClickHouse-specific patch:
+ *     AWS-SDK supports boringssl, OpenSSL 1.0, OpenSSL 1.1 and a proprietary crypto library (AWS-LC). OpenSSL 3.x is not explicitly supported.
+ *     It tries to find the right library at runtime by first checking for statically, and then dynamically linked symbols, using a specific
+ *     order of libraries.
+ *     The code below tries to link certain OpenSSL 1.0 symbols which were deprecated in OpenSSL 1.1 and completely removed in OpenSSL 3.0
+ *     (and there is no compatibility compile option in OpenSSL to bring them back). As a result, the linker complains that it can't find
+ *     them. Interestingly, this happens only on Darwin, Linux is fine.
+ *     Since the library order is cascading, the code falls back to OpenSSL 1.1.
+ */
+#if 0
     evp_md_ctx_new md_create_fn = s_EVP_MD_CTX_create;
     evp_md_ctx_free md_destroy_fn = s_EVP_MD_CTX_destroy;
     evp_md_ctx_digest_init_ex md_init_ex_fn = EVP_DigestInit_ex;
@@ -373,6 +394,7 @@ bool s_resolve_md_102(void *module) {
         g_aws_openssl_evp_md_ctx_table = &evp_md_ctx_table;
         return true;
     }
+#endif
 #endif
     return false;
 }
