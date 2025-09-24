@@ -656,7 +656,6 @@ static enum aws_libcrypto_version s_resolve_libcrypto_sharedlib(void) {
 static enum aws_libcrypto_version s_resolve_libcrypto(void) {
     /* Try to auto-resolve against what's linked in/process space */
     AWS_LOGF_DEBUG(AWS_LS_CAL_LIBCRYPTO_RESOLVE, "searching process and loaded modules");
-<<<<<<< HEAD
     void *process = dlopen(NULL, RTLD_NOW);
 
 #if 0 /* Disabled because dlopen() always returns NULL for ClickHouse. */
