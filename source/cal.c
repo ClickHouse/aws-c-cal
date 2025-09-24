@@ -6,7 +6,7 @@
 #include <aws/common/common.h>
 #include <aws/common/error.h>
 
-#define AWS_DEFINE_ERROR_INFO_CAL(CODE, STR) [(CODE)-0x1C00] = AWS_DEFINE_ERROR_INFO(CODE, STR, "aws-c-cal")
+#define AWS_DEFINE_ERROR_INFO_CAL(CODE, STR) [(CODE) - 0x1C00] = AWS_DEFINE_ERROR_INFO(CODE, STR, "aws-c-cal")
 
 static struct aws_error_info s_errors[] = {
     AWS_DEFINE_ERROR_INFO_CAL(AWS_ERROR_CAL_SIGNATURE_VALIDATION_FAILED, "Verify on a cryptographic signature failed."),
@@ -67,6 +67,7 @@ static struct aws_log_subject_info s_cal_log_subject_infos[] = {
         "libcrypto_resolve",
         "Subject for libcrypto symbol resolution logging."),
     DEFINE_LOG_SUBJECT_INFO(AWS_LS_CAL_RSA, "rsa", "Subject for rsa cryptography specific logging."),
+    DEFINE_LOG_SUBJECT_INFO(AWS_LS_CAL_ED25519, "ed25519", "Subject for ed25519 cryptography specific logging."),
 };
 
 static struct aws_log_subject_info_list s_cal_log_subject_list = {

@@ -1,38 +1,22 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.9...3.31)
 
 project(aws-c-cal LANGUAGES C VERSION 0.1.0)
-
-if (POLICY CMP0069)
-    cmake_policy(SET CMP0069 NEW) # Enable LTO/IPO if available in the compiler, see AwsCFlags
-endif()
 
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
 option(BYO_CRYPTO "Set this if you want to provide your own cryptography implementation. This will cause the defaults to not be compiled." OFF)
 option(USE_OPENSSL "Set this if you want to use your system's OpenSSL 1.0.2/1.1.1 compatible libcrypto" OFF)
+option(AWS_USE_CRYPTO_SHARED_LIBS "Force c-cal to use shared libs in Findcrypto" OFF)
+option(AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE "Experimental feature to support ED25519 keygen on platforms that do not support it in os libs (i.e. win/mac)" OFF)
 
-if (DEFINED CMAKE_PREFIX_PATH)
-    file(TO_CMAKE_PATH "${CMAKE_PREFIX_PATH}" CMAKE_PREFIX_PATH)
+if (NOT IN_SOURCE_BUILD)
+    # this is required so we can use aws-c-common's CMake modules
+    find_package(aws-c-common REQUIRED)
 endif()
 
-if (DEFINED CMAKE_INSTALL_PREFIX)
-    file(TO_CMAKE_PATH "${CMAKE_INSTALL_PREFIX}" CMAKE_INSTALL_PREFIX)
-endif()
-
-if (UNIX AND NOT APPLE)
-    include(GNUInstallDirs)
-elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-    set(CMAKE_INSTALL_LIBDIR "lib")
-endif()
-
-# This is required in order to append /lib/cmake to each element in CMAKE_PREFIX_PATH
-set(AWS_MODULE_DIR "/${CMAKE_INSTALL_LIBDIR}/cmake")
-string(REPLACE ";" "${AWS_MODULE_DIR};" AWS_MODULE_PATH "${CMAKE_PREFIX_PATH}${AWS_MODULE_DIR}")
-# Append that generated list to the module search path
-list(APPEND CMAKE_MODULE_PATH ${AWS_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 
 include(AwsCFlags)
@@ -40,13 +24,14 @@ include(AwsCheckHeaders)
 include(AwsSharedLibSetup)
 include(AwsSanitizers)
 include(AwsFindPackage)
+include(GNUInstallDirs)
 
 file(GLOB AWS_CAL_HEADERS
-        "include/aws/cal/*.h"
+    "include/aws/cal/*.h"
 )
 
 file(GLOB AWS_CAL_SRC
-        "source/*.c"
+    "source/*.c"
 )
 
 if (WIN32)
@@ -55,10 +40,18 @@ if (WIN32)
         file(GLOB AWS_CAL_OS_SRC
             "source/windows/*.c"
         )
-        if (AWS_SUPPORT_WIN7)
-            set(PLATFORM_LIBS BCrypt)
+
+        if (AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
+            list(APPEND AWS_CAL_OS_SRC "source/shared/ed25519.c")
+            list(APPEND AWS_CAL_OS_SRC "source/shared/lccrypto_common.c")
         else()
-            set(PLATFORM_LIBS NCrypt)
+            list(APPEND AWS_CAL_OS_SRC "source/shared/ed25519_noop.c")
+        endif()
+
+        if (AWS_SUPPORT_WIN7)
+            set(PLATFORM_LIBS bcrypt)
+        else()
+            set(PLATFORM_LIBS ncrypt)
         endif()
     endif()
 
@@ -69,55 +62,101 @@ if (WIN32)
     endif ()
 
 elseif (APPLE)
+    if(DEFINED CMAKE_OSX_SYSROOT)
+        message(STATUS "CMAKE_OSX_SYSROOT is defined and set to: ${CMAKE_OSX_SYSROOT} this value")
+    else()
+        message(STATUS "CMAKE_OSX_SYSROOT is not defined")
+    endif()
+
+    # As of CMake 4.0 isysroot is no longer set on mac and instead /usr/local is checked
+    # On systems where custom headers are installed at that location (homebrew loves doing that)
+    # we can end up building against random libcrypto headers, which are not guaranteed to be forward compatible.
+    # This tries to set isysroot in a way that works on as many combinations of cmake and os as possible.
+    if(NOT CMAKE_OSX_SYSROOT)
+        execute_process(
+            COMMAND xcrun --show-sdk-path
+            RESULT_VARIABLE XCRUN_RESULT
+            OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        if(NOT XCRUN_RESULT EQUAL 0)
+            message(WARNING "Failed to determine SDK path using xcrun")
+        endif()
+    endif()
+
     if (NOT BYO_CRYPTO)
         file(GLOB AWS_CAL_OS_SRC
-        "source/darwin/*.c"
+            "source/darwin/*.c"
         )
+
+        if (AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
+            list(APPEND AWS_CAL_OS_SRC "source/shared/ed25519.c")
+            list(APPEND AWS_CAL_OS_SRC "source/shared/lccrypto_common.c")
+        else()
+            list(APPEND AWS_CAL_OS_SRC "source/shared/ed25519_noop.c")
+        endif()
 
         find_library(SECURITY_LIB Security)
         if (NOT SECURITY_LIB)
            message(FATAL_ERROR "Security Framework not found")
         endif ()
 
-        list(APPEND PLATFORM_LIBS "-framework Security")
+        find_library(COREFOUNDATION_LIB CoreFoundation)
+        if(NOT COREFOUNDATION_LIB)
+           message(FATAL_ERROR "CoreFoundation Framework not found")
+        endif()
+
+        list(APPEND PLATFORM_LIBS "-framework Security -framework CoreFoundation")
     endif()
 else ()
     if (NOT BYO_CRYPTO)
         file(GLOB AWS_CAL_OS_SRC
             "source/unix/*.c"
+            "source/shared/ed25519.c"
+            "source/shared/lccrypto_common.c"
         )
+    endif()
+endif()
+
+if (NOT BYO_CRYPTO)
+    if ((NOT WIN32 AND NOT APPLE) OR AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
         if (USE_OPENSSL AND NOT ANDROID)
             find_package(OpenSSL REQUIRED)
             find_package(Threads REQUIRED)
-            set(PLATFORM_LIBS OpenSSL::Crypto Threads::Threads)
+            list(APPEND PLATFORM_LIBS OpenSSL::Crypto Threads::Threads)
             message(STATUS "Using libcrypto from system: ${OPENSSL_CRYPTO_LIBRARY}")
         elseif(NOT USE_OPENSSL AND IN_SOURCE_BUILD)
             if (TARGET crypto)
                 message(STATUS "Using libcrypto from AWS-LC")
+                list(APPEND PLATFORM_LIBS  crypto)
+            elseif(AWSLC_PREBUILT)
+                message(STATUS "Using prebuilt libcrypto from AWS-LC")
+                find_package(crypto REQUIRED)
+                list(APPEND PLATFORM_LIBS  AWS::crypto)
             else()
                 message(FATAL_ERROR "Target crypto is not defined, failed to find libcrypto.")
             endif()
-            set(PLATFORM_LIBS crypto)
         else()
-            #  note aws_use_package() does this for you, except it appends to the public link targets
+            # note aws_use_package() does this for you, except it appends to the public link targets
             # which we probably don't want for this case where we want the crypto dependency private
             if (IN_SOURCE_BUILD)
-                set(PLATFORM_LIBS crypto)
+                list(APPEND PLATFORM_LIBS crypto)
             else()
                 find_package(crypto REQUIRED)
-                set(PLATFORM_LIBS AWS::crypto)
+                list(APPEND PLATFORM_LIBS AWS::crypto)
             endif()
         endif()
     endif()
 endif()
 
 file(GLOB CAL_HEADERS
-        ${AWS_CAL_HEADERS}
+    ${AWS_CAL_HEADERS}
 )
 
 file(GLOB CAL_SRC
-        ${AWS_CAL_SRC}
-        ${AWS_CAL_OS_SRC}
+    ${AWS_CAL_SRC}
+    ${AWS_CAL_OS_SRC}
 )
 
 add_library(${PROJECT_NAME} ${CAL_SRC})
@@ -130,6 +169,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${DEP_AWS_LIBS} ${PLATFORM_LIBS})
 
 if (BYO_CRYPTO)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DBYO_CRYPTO)
+endif()
+
+if (AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE -DAWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
 endif()
 
 # Our ABI is not yet stable
@@ -150,7 +193,7 @@ configure_file("cmake/${PROJECT_NAME}-config.cmake"
   @ONLY)
 
 aws_check_headers(${PROJECT_NAME} ${AWS_CAL_HEADERS})
-install(FILES ${AWS_CAL_HEADERS} DESTINATION "include/aws/cal" COMPONENT Development)
+install(FILES ${AWS_CAL_HEADERS} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/aws/cal" COMPONENT Development)
 
 if (BUILD_SHARED_LIBS)
    set (TARGET_DIR "shared")
@@ -159,12 +202,12 @@ else()
 endif()
 
 install(EXPORT "${PROJECT_NAME}-targets"
-    DESTINATION "${LIBRARY_DIRECTORY}/${PROJECT_NAME}/cmake/${TARGET_DIR}/"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/${TARGET_DIR}/"
     NAMESPACE AWS::
     COMPONENT Development)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    DESTINATION "${LIBRARY_DIRECTORY}/${PROJECT_NAME}/cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT Development)
 
 list(APPEND EXPORT_MODULES
@@ -172,7 +215,7 @@ list(APPEND EXPORT_MODULES
     )
 
 install(FILES ${EXPORT_MODULES}
-        DESTINATION "${LIBRARY_DIRECTORY}/${PROJECT_NAME}/cmake/modules"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/modules"
         COMPONENT Development)
 
 if (NOT CMAKE_CROSSCOMPILING AND NOT BYO_CRYPTO)

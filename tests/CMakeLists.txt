@@ -77,15 +77,19 @@ add_test_case(rsa_encryption_roundtrip_oaep_sha256_from_user)
 add_test_case(rsa_encryption_roundtrip_oaep_sha512_from_user)
 add_test_case(rsa_signing_roundtrip_pkcs1_sha256_from_user)
 add_test_case(rsa_signing_roundtrip_pss_sha256_from_user)
+add_test_case(rsa_signing_roundtrip_pkcs1_sha1_from_user)
 add_test_case(rsa_getters)
 add_test_case(rsa_private_pkcs1_der_parsing)
 add_test_case(rsa_public_pkcs1_der_parsing)
 add_test_case(rsa_verify_signing_pkcs1_sha256)
+add_test_case(rsa_verify_signing_pkcs1_sha1)
 add_test_case(rsa_verify_signing_pss_sha256)
 add_test_case(rsa_decrypt_pkcs1)
 add_test_case(rsa_decrypt_oaep256)
 add_test_case(rsa_decrypt_oaep512)
 add_test_case(rsa_signing_mismatch_pkcs1_sha256)
+add_test_case(rsa_signing_mismatch_pkcs1_sha1)
+add_test_case(rsa_encryption_roundtrip_pkcs15_from_user_pkcs8)
 
 add_test_case(aes_cbc_NIST_CBCGFSbox256_case_1)
 add_test_case(aes_cbc_NIST_CBCVarKey256_case_254)
@@ -116,6 +120,10 @@ add_test_case(aes_keywrap_RFC3394_256BitKey128BitCekIntegrityCheckFailedTestVect
 add_test_case(aes_keywrap_RFC3394_256BitKey128BitCekPayloadCheckFailedTestVector)
 add_test_case(aes_keywrap_validate_materials_fails)
 add_test_case(aes_test_input_too_large)
+add_test_case(aes_test_encrypt_empty_input)
+add_test_case(aes_test_empty_input_gcm_tag_corner_cases)
+add_test_case(aes_test_gcm_tag_corner_cases)
+add_test_case(aes_test_gcm_tag_large_input_corner_cases)
 
 add_test_case(der_encode_integer)
 add_test_case(der_encode_integer_zero)
@@ -147,4 +155,18 @@ add_test_case(ecc_key_pair_asn1_ref_count_test)
 add_test_case(ecc_key_pair_private_ref_count_test)
 add_test_case(ecc_key_gen_from_private_fuzz_test)
 
+add_test_case(ed25519_key_pair_generate_test)
+
 generate_test_driver(${PROJECT_NAME}-tests)
+
+if (AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
+    target_compile_definitions(${PROJECT_NAME}-tests PRIVATE -DAWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
+endif()
+
+# OpenBSD 7.4+ defaults to linking with --execute-only which is not always safe for AWS-LC.
+# We have similar link flags in bindings, but in this case we need on the test executable,
+# because ed25519 keygen is hitting the same issue 
+# (according to aws-lc huge tables in text section for ed25519 is the likely culprit)
+if(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+    target_link_options(${PROJECT_NAME}-tests PRIVATE "-Wl,--no-execute-only")
+endif()

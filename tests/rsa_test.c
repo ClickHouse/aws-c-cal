@@ -10,6 +10,8 @@
 #include <aws/common/encoding.h>
 #include <aws/testing/aws_test_harness.h>
 
+#include "test_case_helper.h"
+
 /*
  * TODO: Need better test vectors. NIST ones are a pain to use.
  * For now using manually generated vectors and relying on round tripping.
@@ -100,6 +102,33 @@ static const char *TEST_PKCS1_RSA_PRIVATE_KEY_2048 = "MIIEpQIBAAKCAQEAnt/K3mvMgP
                                                      "tZI9TCH4Sq33MGEjf2MyW0XMXC56dA2VOPSTHGKaoKmyn7L9G4WfDFcYmCdvmLkR"
                                                      "7wAz2Dyxr6ImChSWD/y2ddz1U+H39uqRxwIkwJ7TbDflYNXgsAOOlUg=";
 
+static const char *TEST_PKCS8_RSA_PRIVATE_KEY_2048 = "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDN0jYhXzsI1lSA"
+                                                     "j+3uxraUu/78uHJlCcTifQlVUftgEzJth7WNGvrJ8bDLUHwV04cTYSkydgsivjms"
+                                                     "XFgzuTCOLiHX0ik/RT1fOvOpk0gte2gCfPIACUAkTlGXKJ+v+1kqnWFmZFNvtkz2"
+                                                     "fmLIRq9ZrXWORVmySCeoSfvyygxkmfTUfGieFr8LMFSB6VoWKA/vOk0sMF/5PRxm"
+                                                     "JESS4pOMjWQ3QHpLdjsgUAnxsThLVMbaA5JXdHnFHlgkTbL/OSY06EUzuZ0dJpTU"
+                                                     "qSBbaz6qewlIO4eM9d2N+5d/mt5nn4rU7yuLGlJE/U9UpSutuvkCkqosST9yKBz7"
+                                                     "YUhK7WyPAgMBAAECggEAYrHEZyhFJK2yA5wA2hjLgHLNiN3hbPXMRVbz3MfdJGrQ"
+                                                     "KZmDw1AGpkORJU1I0yaFhRN4L8xO9rAE89OsL9FDqUoRzG3ofYB0N3ALW2tWlwiw"
+                                                     "DVFgsge9jCtKEJPYTwjV7wtcoz7Ei7L9IM3mDGdoujXlQv2aT1UuPxKLEBc27h3Q"
+                                                     "KZZL0QbA33SmO24BUx9Y741hIXsVvoce0MQM1TPwEGH18qYpffb3kCBTwFEySx+q"
+                                                     "JFwadZiK1JPQgpELrXZT0VuARD2Ze8Z7c0b6668wYiwJ2mmf4l0NTLk67mIIfG1w"
+                                                     "NNNzHme/UGQEjSjUU9TFWLVHU9enumPv5UeLx3wvgQKBgQD7k6pCk8kkUcjjq0sq"
+                                                     "92Coy1DMlZg9ictcusJ5pfe1ZdW01iX/S/88ZOxk1X27jTWcHarAeA+ci4LzDWPG"
+                                                     "I61Hy4kJFOJB6Sx3hDSnfNvuIC/7zrcWLNzvfAeDYmPhAqi1K4HYFN7Ipa/1+Uew"
+                                                     "kWVllcUHRz5zWU+oYVXDsjARrwKBgQDRcJowibhaG4UUMzRsyyEK1l/w+z75L8A7"
+                                                     "2ZA+wMqyUo9LPgJRYvEHHRQTHDGCzP81IUaAK2OfWrD5Jnn6r4Il7+cQ+xCHKiMD"
+                                                     "rBhnL9dG4lVAWgdZPyWXfrdT3mqpZ3UgfWysvph8s48QdLA3ku7PpTfchwtSdXQP"
+                                                     "cxhEItlrIQKBgQDTTB8AdCfIfXiA3+nuWH+yxbFDY5HOfeF0LNgSXDdFABcSH5si"
+                                                     "Za4mB44U0ssbr2qLiM9VgIF8NiDyCxj13hk359dc7VFrknBqoXuoANKnmhkzIVfd"
+                                                     "JCkca8vTqdvBrP4NzFDuL/k+BQtZSNnRjwze2X/2sPve3fBtt/LUvuBouQKBgQC9"
+                                                     "T1Cv6uxN1m410grjA8C8MQXLpu5HAxh5gLBXaKBPCz0mv8gMlKhUy73ngCZomq9b"
+                                                     "8NXu6ElGMw2gR10ecSHs9KohuS45XqcDnLz6GE44bkCsyDO4QdHS2+EN2A8FTNSc"
+                                                     "J4Lhqe3fWdZJA5B8yz09R5P0q8RaJnxfsqMOg4mOwQKBgQC+N5xLCRa/n1kJ11we"
+                                                     "rnOe2POS+zuThhi1aMn0LLPIDwVMktymV7F8JegbdYB5KjxyxzDPcpRDRKCXvAew"
+                                                     "QiaCZLRyigBqDpDP4l3uIp1OEzWLYuEAWwnErC7fuPm0TFAy5ecegxW7eXasDy2C"
+                                                     "dJJcK3yV8NRVOzr2voGRmr4d7w==";
+
 static int s_rsa_encryption_roundtrip_from_user(
     struct aws_allocator *allocator,
     enum aws_rsa_encryption_algorithm algo) {
@@ -120,10 +149,30 @@ static int s_rsa_encryption_roundtrip_from_user(
     return AWS_OP_SUCCESS;
 }
 
+static int s_rsa_encryption_roundtrip_from_user_pkcs8(
+    struct aws_allocator *allocator,
+    enum aws_rsa_encryption_algorithm algo) {
+    struct aws_byte_buf key_buf;
+    ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
+        allocator, aws_byte_cursor_from_c_str(TEST_PKCS8_RSA_PRIVATE_KEY_2048), &key_buf));
+
+    struct aws_rsa_key_pair *key_pair =
+        aws_rsa_key_pair_new_from_private_key_pkcs8(allocator, aws_byte_cursor_from_buf(&key_buf));
+
+    ASSERT_NOT_NULL(key_pair);
+
+    s_rsa_encryption_roundtrip_helper(allocator, key_pair, algo);
+
+    aws_rsa_key_pair_release(key_pair);
+    aws_byte_buf_clean_up_secure(&key_buf);
+
+    return AWS_OP_SUCCESS;
+}
+
 static int s_rsa_encryption_roundtrip_pkcs1_from_user(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     ASSERT_SUCCESS(s_rsa_encryption_roundtrip_from_user(allocator, AWS_CAL_RSA_ENCRYPTION_PKCS1_5));
 
@@ -133,10 +182,44 @@ static int s_rsa_encryption_roundtrip_pkcs1_from_user(struct aws_allocator *allo
 }
 AWS_TEST_CASE(rsa_encryption_roundtrip_pkcs1_from_user, s_rsa_encryption_roundtrip_pkcs1_from_user);
 
+static int s_rsa_encryption_roundtrip_pkcs15_from_user_pkcs8(struct aws_allocator *allocator, void *ctx) {
+    (void)ctx;
+
+    aws_cal_library_test_init(allocator);
+
+    ASSERT_SUCCESS(s_rsa_encryption_roundtrip_from_user_pkcs8(allocator, AWS_CAL_RSA_ENCRYPTION_PKCS1_5));
+
+    aws_cal_library_clean_up();
+
+    return AWS_OP_SUCCESS;
+}
+AWS_TEST_CASE(rsa_encryption_roundtrip_pkcs15_from_user_pkcs8, s_rsa_encryption_roundtrip_pkcs15_from_user_pkcs8);
+
+static int s_rsa_pkcs8_key_load_error(struct aws_allocator *allocator, void *ctx) {
+    (void)ctx;
+
+    aws_cal_library_test_init(allocator);
+
+    struct aws_byte_buf key_buf;
+    ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
+        allocator, aws_byte_cursor_from_c_str(TEST_PKCS1_RSA_PRIVATE_KEY_2048), &key_buf));
+
+    struct aws_rsa_key_pair *key_pair =
+        aws_rsa_key_pair_new_from_private_key_pkcs8(allocator, aws_byte_cursor_from_buf(&key_buf));
+
+    ASSERT_NULL(key_pair);
+    ASSERT_INT_EQUALS(AWS_ERROR_CAL_MALFORMED_ASN1_ENCOUNTERED, aws_last_error());
+
+    aws_cal_library_clean_up();
+
+    return AWS_OP_SUCCESS;
+}
+AWS_TEST_CASE(rsa_pkcs8_key_load_error, s_rsa_pkcs8_key_load_error);
+
 static int s_rsa_encryption_roundtrip_oaep_sha256_from_user(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     ASSERT_SUCCESS(s_rsa_encryption_roundtrip_from_user(allocator, AWS_CAL_RSA_ENCRYPTION_OAEP_SHA256));
 
@@ -149,7 +232,7 @@ AWS_TEST_CASE(rsa_encryption_roundtrip_oaep_sha256_from_user, s_rsa_encryption_r
 static int s_rsa_encryption_roundtrip_oaep_sha512_from_user(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     ASSERT_SUCCESS(s_rsa_encryption_roundtrip_from_user(allocator, AWS_CAL_RSA_ENCRYPTION_OAEP_SHA512));
 
@@ -184,6 +267,11 @@ static const char *TEST_RSA_SIGNATURE_PKCS1 = "Gqu9pLlPvSFIW+5ZFo9ZCxMmPR8LnAeiu
                                               "TYJ45P3c94lQIQD3SVJ3XMSAyAEWTE2pcj0F/oPzzxLcXK9cyv2Iphe4XuBjWCOVdHgFg"
                                               "rD/yAA8b+B94AqE9U/B2+k9/C3Bz2YApo=";
 
+static const char *TEST_RSA_SIGNATURE_PKCS1_SHA1 =
+    "QJxUx+4OM+v1wh0z0PJWMeGBdvjhQHxjFCdzDLeNH6zoJpgPtFXNk6i83ff75MgPpW0m33"
+    "zrrzLWfzLojZFi2KFXYu1Y39We3AfREEOyG+porTmxNQ4dJH29joXS0XNf52dJpN04Lw3WN"
+    "XUHDP6eG2K71uXlsus2Tm0uBe4TF0g=";
+
 static const char *TEST_RSA_SIGNATURE_PSS = "j//04sVoqQVSmUgH+Id0oad7OgW+hGnIqx6hjr28VnVk75Obig+n3tJGWd0r+3S4ARxf2fK"
                                             "7taVvJXISQ5aWJAYx6QRgR+25rcE96eOfi6L7ShIZIUYFzGxhc9wpUMGbqHEIhm+8QP7uNo4D"
                                             "FmaPzJMgGDKL2qhedxnjtg3p8E4=";
@@ -211,7 +299,7 @@ static int s_rsa_verify_signing_pkcs1_sha256(struct aws_allocator *allocator, vo
     (void)ctx;
     struct aws_byte_cursor message = aws_byte_cursor_from_c_str(TEST_ENCRYPTION_STRING);
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf public_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -245,11 +333,49 @@ static int s_rsa_verify_signing_pkcs1_sha256(struct aws_allocator *allocator, vo
 }
 AWS_TEST_CASE(rsa_verify_signing_pkcs1_sha256, s_rsa_verify_signing_pkcs1_sha256);
 
-static int s_rsa_verify_signing_pss_sha256(struct aws_allocator *allocator, void *ctx) {
+static int s_rsa_verify_signing_pkcs1_sha1(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
     struct aws_byte_cursor message = aws_byte_cursor_from_c_str(TEST_ENCRYPTION_STRING);
 
     aws_cal_library_init(allocator);
+
+    struct aws_byte_buf public_key_buf;
+    ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
+        allocator, aws_byte_cursor_from_c_str(TEST_PKCS1_RSA_PUBLIC_KEY_1024), &public_key_buf));
+    struct aws_rsa_key_pair *key_pair_public =
+        aws_rsa_key_pair_new_from_public_key_pkcs1(allocator, aws_byte_cursor_from_buf(&public_key_buf));
+    ASSERT_NOT_NULL(key_pair_public);
+
+    uint8_t hash[AWS_SHA1_LEN];
+    AWS_ZERO_ARRAY(hash);
+    struct aws_byte_buf hash_value = aws_byte_buf_from_empty_array(hash, sizeof(hash));
+    aws_sha1_compute(allocator, &message, &hash_value, 0);
+    struct aws_byte_cursor hash_cur = aws_byte_cursor_from_buf(&hash_value);
+
+    struct aws_byte_buf signature_buf;
+    ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
+        allocator, aws_byte_cursor_from_c_str(TEST_RSA_SIGNATURE_PKCS1_SHA1), &signature_buf));
+    struct aws_byte_cursor signature_cur = aws_byte_cursor_from_buf(&signature_buf);
+
+    ASSERT_SUCCESS(aws_rsa_key_pair_verify_signature(
+        key_pair_public, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1, hash_cur, signature_cur));
+
+    aws_byte_buf_clean_up(&hash_value);
+    aws_byte_buf_clean_up(&signature_buf);
+    aws_byte_buf_clean_up(&public_key_buf);
+    aws_rsa_key_pair_release(key_pair_public);
+
+    aws_cal_library_clean_up();
+
+    return AWS_OP_SUCCESS;
+}
+AWS_TEST_CASE(rsa_verify_signing_pkcs1_sha1, s_rsa_verify_signing_pkcs1_sha1);
+
+static int s_rsa_verify_signing_pss_sha256(struct aws_allocator *allocator, void *ctx) {
+    (void)ctx;
+    struct aws_byte_cursor message = aws_byte_cursor_from_c_str(TEST_ENCRYPTION_STRING);
+
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf public_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -286,7 +412,7 @@ AWS_TEST_CASE(rsa_verify_signing_pss_sha256, s_rsa_verify_signing_pss_sha256);
 static int s_rsa_decrypt_pkcs1(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf private_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -324,7 +450,7 @@ AWS_TEST_CASE(rsa_decrypt_pkcs1, s_rsa_decrypt_pkcs1);
 static int s_rsa_decrypt_oaep256(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf private_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -362,7 +488,7 @@ AWS_TEST_CASE(rsa_decrypt_oaep256, s_rsa_decrypt_oaep256);
 static int s_rsa_decrypt_oaep512(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf private_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -408,7 +534,12 @@ static int s_rsa_signing_roundtrip_helper(
     uint8_t hash[AWS_SHA256_LEN];
     AWS_ZERO_ARRAY(hash);
     struct aws_byte_buf hash_value = aws_byte_buf_from_empty_array(hash, sizeof(hash));
-    aws_sha256_compute(allocator, &message, &hash_value, 0);
+    if (algo == AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1) {
+        aws_sha1_compute(allocator, &message, &hash_value, 0);
+    } else {
+        aws_sha256_compute(allocator, &message, &hash_value, 0);
+    }
+
     struct aws_byte_cursor hash_cur = aws_byte_cursor_from_buf(&hash_value);
 
     /*since our apis work by appending to buffer, lets make sure they dont
@@ -481,7 +612,7 @@ static int s_rsa_signing_roundtrip_from_user(
 static int s_rsa_signing_roundtrip_pkcs1_sha256_from_user(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     ASSERT_SUCCESS(
         s_rsa_signing_roundtrip_from_user(allocator, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA256, TEST_RSA_SIGNATURE_PKCS1));
@@ -492,10 +623,24 @@ static int s_rsa_signing_roundtrip_pkcs1_sha256_from_user(struct aws_allocator *
 }
 AWS_TEST_CASE(rsa_signing_roundtrip_pkcs1_sha256_from_user, s_rsa_signing_roundtrip_pkcs1_sha256_from_user);
 
-static int s_rsa_signing_roundtrip_pss_sha256_from_user(struct aws_allocator *allocator, void *ctx) {
+static int s_rsa_signing_roundtrip_pkcs1_sha1_from_user(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
     aws_cal_library_init(allocator);
+
+    ASSERT_SUCCESS(s_rsa_signing_roundtrip_from_user(
+        allocator, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1, TEST_RSA_SIGNATURE_PKCS1_SHA1));
+
+    aws_cal_library_clean_up();
+
+    return AWS_OP_SUCCESS;
+}
+AWS_TEST_CASE(rsa_signing_roundtrip_pkcs1_sha1_from_user, s_rsa_signing_roundtrip_pkcs1_sha1_from_user);
+
+static int s_rsa_signing_roundtrip_pss_sha256_from_user(struct aws_allocator *allocator, void *ctx) {
+    (void)ctx;
+
+    aws_cal_library_test_init(allocator);
 
 #if defined(AWS_OS_MACOS)
     if (__builtin_available(macOS 10.12, *)) {
@@ -518,7 +663,7 @@ AWS_TEST_CASE(rsa_signing_roundtrip_pss_sha256_from_user, s_rsa_signing_roundtri
 static int s_rsa_getters(struct aws_allocator *allocator, void *ctx) {
     (void)ctx;
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf private_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -615,7 +760,7 @@ static int s_rsa_private_pkcs1_der_parsing(struct aws_allocator *allocator, void
                              0x6e, 0xc1, 0x19, 0x6a, 0x82, 0xaf, 0xdc, 0xbd, 0x9c, 0x1b, 0x7d, 0x2a, 0xec,
                              0x8d, 0xd5, 0x59, 0x4d, 0x6f, 0x38, 0x89, 0xa7, 0xe5, 0x1c, 0x29, 0x57};
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf private_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -665,7 +810,7 @@ static int s_rsa_public_pkcs1_der_parsing(struct aws_allocator *allocator, void 
 
     static uint8_t e[] = {0x01, 0x00, 0x01};
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf public_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -694,7 +839,7 @@ static int s_rsa_signing_mismatch_pkcs1_sha256(struct aws_allocator *allocator, 
     (void)ctx;
     struct aws_byte_cursor message = aws_byte_cursor_from_c_str(TEST_ENCRYPTION_STRING);
 
-    aws_cal_library_init(allocator);
+    aws_cal_library_test_init(allocator);
 
     struct aws_byte_buf public_key_buf;
     ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
@@ -745,3 +890,59 @@ static int s_rsa_signing_mismatch_pkcs1_sha256(struct aws_allocator *allocator, 
     return AWS_OP_SUCCESS;
 }
 AWS_TEST_CASE(rsa_signing_mismatch_pkcs1_sha256, s_rsa_signing_mismatch_pkcs1_sha256);
+
+static int s_rsa_signing_mismatch_pkcs1_sha1(struct aws_allocator *allocator, void *ctx) {
+    (void)ctx;
+    struct aws_byte_cursor message = aws_byte_cursor_from_c_str(TEST_ENCRYPTION_STRING);
+
+    aws_cal_library_init(allocator);
+
+    struct aws_byte_buf public_key_buf;
+    ASSERT_SUCCESS(s_byte_buf_decoded_from_base64_cur(
+        allocator, aws_byte_cursor_from_c_str(TEST_PKCS1_RSA_PRIVATE_KEY_1024), &public_key_buf));
+    struct aws_rsa_key_pair *key_pair_private =
+        aws_rsa_key_pair_new_from_private_key_pkcs1(allocator, aws_byte_cursor_from_buf(&public_key_buf));
+    ASSERT_NOT_NULL(key_pair_private);
+
+    uint8_t hash[AWS_SHA1_LEN];
+    AWS_ZERO_ARRAY(hash);
+    struct aws_byte_buf hash_value = aws_byte_buf_from_empty_array(hash, sizeof(hash));
+    aws_sha1_compute(allocator, &message, &hash_value, 0);
+    struct aws_byte_cursor hash_cur = aws_byte_cursor_from_buf(&hash_value);
+
+    struct aws_byte_buf signature_buf;
+    ASSERT_SUCCESS(aws_byte_buf_init(&signature_buf, allocator, aws_rsa_key_pair_signature_length(key_pair_private)));
+    ASSERT_SUCCESS(
+        aws_rsa_key_pair_sign_message(key_pair_private, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1, hash_cur, &signature_buf));
+    struct aws_byte_cursor signature_cur = aws_byte_cursor_from_buf(&signature_buf);
+
+    hash[5] += 59; /* modify digest to force signature mismatch */
+
+    ASSERT_ERROR(
+        AWS_ERROR_CAL_SIGNATURE_VALIDATION_FAILED,
+        aws_rsa_key_pair_verify_signature(
+            key_pair_private, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1, hash_cur, signature_cur));
+
+    hash[5] -= 59; /* undo digest modification and corrupt signature */
+    signature_buf.buffer[5] += 59;
+    ASSERT_ERROR(
+        AWS_ERROR_CAL_SIGNATURE_VALIDATION_FAILED,
+        aws_rsa_key_pair_verify_signature(
+            key_pair_private, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1, hash_cur, signature_cur));
+
+    struct aws_byte_cursor short_signature_cur = aws_byte_cursor_from_c_str("bad signature");
+    ASSERT_ERROR(
+        AWS_ERROR_CAL_SIGNATURE_VALIDATION_FAILED,
+        aws_rsa_key_pair_verify_signature(
+            key_pair_private, AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1, hash_cur, short_signature_cur));
+
+    aws_byte_buf_clean_up(&hash_value);
+    aws_byte_buf_clean_up(&signature_buf);
+    aws_byte_buf_clean_up(&public_key_buf);
+    aws_rsa_key_pair_release(key_pair_private);
+
+    aws_cal_library_clean_up();
+
+    return AWS_OP_SUCCESS;
+}
+AWS_TEST_CASE(rsa_signing_mismatch_pkcs1_sha1, s_rsa_signing_mismatch_pkcs1_sha1);

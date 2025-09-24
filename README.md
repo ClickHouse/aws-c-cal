@@ -8,12 +8,12 @@ This library is licensed under the Apache 2.0 License.
 
 ## Supported Platforms
 * Windows (Vista and Later)
-* Apple
+* Apple (MacOS 10.15+, IOS 11+)
 * Unix (via OpenSSL compatible libcrypto)
 
 ## Build Instructions
 
-CMake 3.0+ is required to build.
+CMake 3.9+ is required to build.
 
 `<install-path>` must be an absolute path in the following instructions.
 
