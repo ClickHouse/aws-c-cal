@@ -3,12 +3,15 @@ name: "Close stale issues"
 # Controls when the action will run.
 on:
   schedule:
-    - cron: "*/60 * * * *"
+    - cron: "0 9 * * 1"
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     name: Stale issue job
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
     - uses: aws-actions/stale-issue-cleanup@v3
       with:

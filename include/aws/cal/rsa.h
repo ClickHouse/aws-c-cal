@@ -19,6 +19,7 @@ enum aws_rsa_encryption_algorithm {
 
 enum aws_rsa_signature_algorithm {
     AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA256,
+    AWS_CAL_RSA_SIGNATURE_PKCS1_5_SHA1,
     AWS_CAL_RSA_SIGNATURE_PSS_SHA256,
 };
 
@@ -49,6 +50,15 @@ AWS_CAL_API struct aws_rsa_key_pair *aws_rsa_key_pair_new_from_public_key_pkcs1(
  * Otherwise returns NULL.
  */
 AWS_CAL_API struct aws_rsa_key_pair *aws_rsa_key_pair_new_from_private_key_pkcs1(
+    struct aws_allocator *allocator,
+    struct aws_byte_cursor key);
+
+/**
+ * Creates an RSA private key from PrivateKeyInfo as defined in rfc 5208 (aka PKCS8).
+ * Returns a new instance of aws_rsa_key_pair if the key was successfully built.
+ * Otherwise returns NULL.
+ */
+AWS_CAL_API struct aws_rsa_key_pair *aws_rsa_key_pair_new_from_private_key_pkcs8(
     struct aws_allocator *allocator,
     struct aws_byte_cursor key);
 
